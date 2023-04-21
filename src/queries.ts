@@ -25,7 +25,11 @@ export const GetTestVideo = graphql(`
     id
     storageBag {
       distributionBuckets(
-        where: { distributionBucket: { distributing_eq: true } }
+        where: {
+          distributionBucket: {
+            OR: [{ distributing_eq: true }, { id_eq: "0:1" }]
+          }
+        }
       ) {
         distributionBucket {
           id

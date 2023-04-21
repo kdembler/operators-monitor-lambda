@@ -2,7 +2,7 @@
   "name": "@joystream/operators-monitor-lambda",
   "version": "0.1.0",
   "description": "Collect latency metrics for all distribution operators",
-  "license": "MIT",
+  "license": "ISC",
   "devDependencies": {
     "@graphql-codegen/cli": "3.3.0",
     "@graphql-codegen/client-preset": "3.0.0",

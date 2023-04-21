@@ -7,16 +7,13 @@ provider:
   deploymentMethod: direct
 
 functions:
-  rateHandler:
+  testOperators:
     handler: src/index.run
     events:
       # Invoke Lambda function every minute
       - schedule: rate(1 minute)
-  # cronHandler:
-  #   handler: index.run
-  #   events:
-  #     # Invoke Lambda function every 2nd minute from Mon-Fri
-  #     - schedule: cron(0/2 * ? * MON-FRI *)
+    environment:
+      METRICS_API_URL: http://localhost:3000/metrics
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
