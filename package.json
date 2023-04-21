@@ -1,0 +1,23 @@
+{
+  "name": "@joystream/operators-monitor-lambda",
+  "version": "0.1.0",
+  "description": "Collect latency metrics for all distribution operators",
+  "license": "MIT",
+  "devDependencies": {
+    "@graphql-codegen/cli": "3.3.0",
+    "@graphql-codegen/client-preset": "3.0.0",
+    "@graphql-codegen/introspection": "3.0.1",
+    "@types/aws-lambda": "^8.10.114",
+    "aws-lambda": "^1.0.7",
+    "serverless-offline": "^12.0.4",
+    "serverless-plugin-typescript": "^2.1.4",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "graphql": "^16.6.0",
+    "graphql-request": "^6.0.0"
+  },
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts"
+  }
+}
