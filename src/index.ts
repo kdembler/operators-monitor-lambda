@@ -5,15 +5,25 @@ import { GetVideosQuery, StorageDataObjectFieldsFragment } from "./gql/graphql";
 
 const apiUrl = "https://orion.joystream.org/graphql";
 const client = new GraphQLClient(apiUrl);
+const verbose = false;
+
+const log = (...args: any[]) => {
+  if (verbose) {
+    console.log(...args);
+  }
+};
 
 export const run: Handler = async function run(event, context) {
   const time = new Date();
-  console.log(`Starting run "${context.functionName}" at ${time}`);
+  log(
+    `Starting run "${context.functionName}" in "${process.env.AWS_REGION}" at ${time}`
+  );
 
   let testVideo: GetVideosQuery["videos"][number];
   try {
-    const res = await client.request(GetTestVideo, { limit: 10, offset: 500 });
-    testVideo = res.videos[Math.floor(Math.random() * res.videos.length)];
+    const offset = Math.floor(Math.random() * 995) + 5;
+    const res = await client.request(GetTestVideo, { limit: 1, offset });
+    testVideo = res.videos[0];
   } catch (e) {
     console.error("Failed to fetch test video");
     console.error(e);
@@ -23,8 +33,10 @@ export const run: Handler = async function run(event, context) {
     throw new Error("No test video found");
   }
 
-  const media = testVideo.media as StorageDataObjectFieldsFragment;
-  const thumbnail = testVideo.thumbnailPhoto as StorageDataObjectFieldsFragment;
+  const isUsingMedia = Math.random() > 0.5;
+  const dataObject = isUsingMedia
+    ? (testVideo.media as StorageDataObjectFieldsFragment)
+    : (testVideo.thumbnailPhoto as StorageDataObjectFieldsFragment);
 
   const getTestsFromDataObject = (
     dataObject: StorageDataObjectFieldsFragment
@@ -37,24 +49,23 @@ export const run: Handler = async function run(event, context) {
           distributionBucketId: bucket.distributionBucket.id,
           workerId: op.workerId,
           nodeEndpoint: op.metadata!.nodeEndpoint!,
+          region: process.env.AWS_REGION!,
+          dataObjectType: isUsingMedia ? "media" : "thumbnail",
         }));
     });
   };
 
-  const tests: TestInput[] = [
-    ...getTestsFromDataObject(media),
-    ...getTestsFromDataObject(thumbnail),
-  ];
+  const tests: TestInput[] = getTestsFromDataObject(dataObject);
 
   const results = await Promise.all(tests.map(runTest));
 
   for (const r of results) {
     if (r.status === "success") {
-      console.log(`${r.url} - success - ${r.responseTime}ms`);
+      log(`${r.url} - success - ${r.responseTime}ms`);
     } else if (r.status === "timeout") {
-      console.log(`${r.url} - timeout`);
+      log(`${r.url} - timeout`);
     } else {
-      console.log(`${r.url} - failure - ${r.statusCode}`);
+      log(`${r.url} - failure - ${r.statusCode}`);
     }
   }
 
@@ -63,6 +74,8 @@ export const run: Handler = async function run(event, context) {
 
 type TestInput = {
   dataObjectId: string;
+  dataObjectType: "media" | "thumbnail";
+  region: string;
   distributionBucketId: string;
   workerId: number;
   nodeEndpoint: string;
@@ -114,9 +127,7 @@ async function sendResults(results: TestResult[]) {
     console.error("METRICS_API_URL not set");
     return;
   }
-  console.log(
-    `Sending ${results.length} results to metrics API at ${metricsApiUrl}`
-  );
+  log(`Sending ${results.length} results to metrics API at ${metricsApiUrl}`);
   const res = await fetch(metricsApiUrl, {
     method: "POST",
     headers: {

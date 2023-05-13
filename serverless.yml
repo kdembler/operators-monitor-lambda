@@ -9,11 +9,12 @@ provider:
 functions:
   testOperators:
     handler: src/index.run
+    memorySize: 256
     events:
       # Invoke Lambda function every minute
       - schedule: rate(1 minute)
     environment:
-      METRICS_API_URL: http://localhost:3000/metrics
+      METRICS_API_URL: https://joystream.koalva.io/operator-metrics/metrics
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
